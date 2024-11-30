@@ -19,7 +19,7 @@ namespace ShopBanGiay
     {
         public List<Shoes> shoesList = new List<Shoes>();
         private BindingSource bindingSource = new BindingSource();
-        string connectionString = @"Data Source=DESKTOP-E3V9138;Initial Catalog=SHOESSHOP2;Integrated Security=True;";
+        string connectionString = @"Data Source=LAPTOP-KHANGDAN;Initial Catalog=SHOESSHOP2;Integrated Security=True";
       
          List<KhachHang> dskhachHang = new List<KhachHang>();
          KhachHang khachHang;
@@ -659,5 +659,10 @@ namespace ShopBanGiay
 		{
 
 		}
-	}
+
+        private void dataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+
+        }
+    }
 }
