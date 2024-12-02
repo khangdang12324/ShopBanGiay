@@ -126,7 +126,10 @@ namespace ShopBanGiay
 
 		private void btnDT_Click(object sender, EventArgs e)
 		{
-
+			OpenChildForm(new frmDoanhThu());
+			ResetButtonColors();
+			btnDT.BackColor = Color.Black;
+			btnDT.ForeColor = Color.White;
 		}
 
 		private void btnNCC_Click(object sender, EventArgs e)

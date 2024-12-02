@@ -374,7 +374,7 @@
 			this.Controls.Add(this.dtgvDSKH);
 			this.Margin = new System.Windows.Forms.Padding(4);
 			this.Name = "frmKhachHang";
-			this.Text = "z";
+			this.Text = "Khach Hang";
 			this.Load += new System.EventHandler(this.frmKhachHang_Load);
 			((System.ComponentModel.ISupportInitialize)(this.dtgvDSKH)).EndInit();
 			this.grTTKH.ResumeLayout(false);

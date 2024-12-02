@@ -466,3 +466,27 @@ VALUES ('2024-11-28', 150000, 'Chưa thanh toán'),
        ('2024-11-29', 200000, 'Chưa thanh toán'),
        ('2024-11-30', 50000, 'Đã thanh toán');
 	   SELECT * FROM Hoadon;
+	   SELECT * FROM Hoadon1;
+
+
+ CREATE TABLE HoaDon (
+    IDHoaDon INT IDENTITY(1,1) PRIMARY KEY,
+    NgayBan DATETIME,
+    TongTien DECIMAL(18, 2),
+    TinhTrang NVARCHAR(50)
+);
+
+INSERT INTO dbo.HoaDon
+(
+    NgayBan,
+    TongTien,
+    TinhTrang
+)
+VALUES
+('2024-11-28', 150000, 'Chưa thanh toán'),
+       ('2020-1-29', 200000, 'Chưa thanh toán'),
+       ('2025-3-30', 50000, 'Đã thanh toán');
+
+SELECT DB_NAME() AS CurrentDatabase;
+
+SELECT IDHoaDon, NgayBan, TongTien FROM HoaDon

@@ -265,5 +265,10 @@ namespace ShopBanGiay
 			formThongKe.Show(); // Sử dụng Show() nếu bạn muốn form mở ở chế độ không chặn
 								// formThongKe.ShowDialog(); // Sử dụng ShowDialog() nếu bạn muốn form mở ở chế độ chặn
 		}
+
+		private void dgvNCC_CellContentClick(object sender, DataGridViewCellEventArgs e)
+		{
+
+		}
 	}
 }
