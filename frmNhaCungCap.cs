@@ -13,7 +13,7 @@ namespace ShopBanGiay
 {
 	public partial class frmNhaCungCap : Form
 	{
-		string connectionString = @"Data Source=DESKTOP-E3V9138;Initial Catalog=SHOESSHOP2;Integrated Security=True;";
+		string connectionString = @"Data Source=LAPTOP-KHANGDAN;Initial Catalog=SHOESSHOP2;Integrated Security=True";
 
 		private DataTable foodTable; // Khai báo foodTable ở phạm vi lớp
 

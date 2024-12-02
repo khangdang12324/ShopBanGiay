@@ -13,7 +13,8 @@ namespace ShopBanGiay
 {
 	public partial class frmThongKe : Form
 	{
-		string connectionString = @"Data Source=DESKTOP-E3V9138;Initial Catalog=SHOESSHOP2;Integrated Security=True;";
+		string connectionString = @"Data Source=LAPTOP-KHANGDAN;Initial Catalog=SHOESSHOP2;Integrated Security=True";
+
 
 		public frmThongKe()
 		{

@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace ShopBanGiay
 {
@@ -29,11 +30,60 @@ namespace ShopBanGiay
 		}
 
 		private void textBox3_TextChanged(object sender, EventArgs e)
-		{
+        {
+			string tenKhachHang = txtTim.Text.Trim(); // Lấy giá trị nhập từ TextBox
 
+			// Gọi phương thức tìm kiếm
+			TimKiemKhachHangTheoTen(tenKhachHang);
+		}
+		private void TimKiemKhachHangTheoTen(string tenKhachHang)
+		{
+			using (SqlConnection conn = new SqlConnection(connectionString))
+			{
+				try
+				{
+					conn.Open();
+
+					string query = @"
+                SELECT 
+                    KH.IDKhachHang, KH.TenKhachHang, KH.soDT, KH.DiaChi, 
+                    SS.Size, 
+                    SC.Mau AS ShoeColor, 
+                    SI.Quantity
+                FROM 
+                    KhachHang KH
+                LEFT JOIN 
+                    ShoeInventory SI ON KH.IDKhachHang = KH.IDKhachHang
+                LEFT JOIN 
+                    SanPham S ON SI.IDSanPham = S.IDSanPham
+                LEFT JOIN 
+                    SizeSanPham SS ON SI.IDSize = SS.IDSize
+                LEFT JOIN 
+                    MauSanPham SC ON SI.IDMau = SC.IDMau
+                WHERE 
+                    KH.TenKhachHang LIKE @TenKhachHang;";
+
+					using (SqlCommand cmd = new SqlCommand(query, conn))
+					{
+						// Thêm tham số tìm kiếm
+						cmd.Parameters.AddWithValue("@TenKhachHang", "%" + tenKhachHang + "%");
+
+						using (SqlDataReader reader = cmd.ExecuteReader())
+						{
+							DataTable dt = new DataTable();
+							dt.Load(reader); // Tải dữ liệu vào DataTable
+							dtgvDSKH.DataSource = dt; // Gán dữ liệu vào DataGridView
+						}
+					}
+				}
+				catch (Exception ex)
+				{
+					MessageBox.Show($"Lỗi khi tìm kiếm: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+				}
+			}
 		}
 
-        private void dtgvDSKH_CellContentClick(object sender, DataGridViewCellEventArgs e)
+		private void dtgvDSKH_CellContentClick(object sender, DataGridViewCellEventArgs e)
         {
        /*     if (e.RowIndex >= 0)
             {
@@ -121,44 +171,85 @@ namespace ShopBanGiay
 
         private void frmKhachHang_Load(object sender, EventArgs e)
         {
-            LoadDataFromSQL();
-            //LoadSizeToComboBox(); 
+			LoadSizeToComboBox();
+
+			LoadDataFromSQL();
         }
-        private int selectedRowIndex = -1; 
+        private int selectedRowIndex = -1;
 
-        private void btnCapNhat_Click(object sender, EventArgs e)
-        {
-            if (selectedRowIndex < 0)
-            {
-                MessageBox.Show("Vui lòng chọn một khách hàng để cập nhật.", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
+		private void btnCapNhat_Click(object sender, EventArgs e)
+		{
+			if (selectedRowIndex < 0)
+			{
+				MessageBox.Show("Vui lòng chọn một khách hàng để cập nhật.", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+				return;
+			}
 
-            if (string.IsNullOrWhiteSpace(txtTenKH.Text) ||
-                string.IsNullOrWhiteSpace(mtkSDTKH.Text) ||
-                string.IsNullOrWhiteSpace(txtDiaChi.Text))
-            {
-                MessageBox.Show("Vui lòng nhập đầy đủ thông tin khách hàng!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
+			if (string.IsNullOrWhiteSpace(txtTenKH.Text) ||
+				string.IsNullOrWhiteSpace(mtkSDTKH.Text) ||
+				string.IsNullOrWhiteSpace(txtDiaChi.Text))
+			{
+				MessageBox.Show("Vui lòng nhập đầy đủ thông tin khách hàng!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+				return;
+			}
 
-            DataGridViewRow selectedRow = dtgvDSKH.Rows[selectedRowIndex];
+			// Lấy IDKhachHang từ dòng được chọn
+			DataGridViewRow selectedRow = dtgvDSKH.Rows[selectedRowIndex];
+			int idKhachHang = Convert.ToInt32(selectedRow.Cells["IDKhachHang"].Value);
 
-            selectedRow.Cells["TenKhachHang"].Value = txtTenKH.Text;
-            selectedRow.Cells["soDT"].Value = mtkSDTKH.Text;
-            selectedRow.Cells["DiaChi"].Value = txtDiaChi.Text;
+			// Chuỗi kết nối (thay đổi cho phù hợp với cơ sở dữ liệu của bạn)
+			string connectionString = @"Data Source=LAPTOP-KHANGDAN;Initial Catalog=SHOESSHOP2;Integrated Security=True";
 
-            MessageBox.Show("Cập nhật thông tin khách hàng thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+			// Câu lệnh SQL UPDATE
+			string query = "UPDATE KhachHang SET TenKhachHang = @TenKhachHang, soDT = @soDT, DiaChi = @DiaChi WHERE IDKhachHang = @IDKhachHang";
 
-            txtTenKH.Clear();
-            mtkSDTKH.Clear();
-            txtDiaChi.Clear();
+			try
+			{
+				using (SqlConnection connection = new SqlConnection(connectionString))
+				{
+					connection.Open();
+					using (SqlCommand command = new SqlCommand(query, connection))
+					{
+						// Gán giá trị cho các tham số
+						command.Parameters.AddWithValue("@TenKhachHang", txtTenKH.Text);
+						command.Parameters.AddWithValue("@soDT", mtkSDTKH.Text);
+						command.Parameters.AddWithValue("@DiaChi", txtDiaChi.Text);
+						command.Parameters.AddWithValue("@IDKhachHang", idKhachHang);
 
-      
-            selectedRowIndex = -1;
-        }
+						// Thực thi câu lệnh
+						int rowsAffected = command.ExecuteNonQuery();
 
-        private void dtgvDSKH_CellClick(object sender, DataGridViewCellEventArgs e)
+						if (rowsAffected > 0)
+						{
+							// Cập nhật thành công
+							MessageBox.Show("Cập nhật thông tin khách hàng thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+							// Cập nhật lại DataGridView
+							selectedRow.Cells["TenKhachHang"].Value = txtTenKH.Text;
+							selectedRow.Cells["soDT"].Value = mtkSDTKH.Text;
+							selectedRow.Cells["DiaChi"].Value = txtDiaChi.Text;
+
+							// Xóa các ô nhập
+							txtTenKH.Clear();
+							mtkSDTKH.Clear();
+							txtDiaChi.Clear();
+
+							selectedRowIndex = -1;
+						}
+						else
+						{
+							MessageBox.Show("Không tìm thấy khách hàng để cập nhật!", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+						}
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				MessageBox.Show("Đã xảy ra lỗi khi cập nhật: " + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+			}
+		}
+
+		private void dtgvDSKH_CellClick(object sender, DataGridViewCellEventArgs e)
         {
             if (e.RowIndex >= 0)
             {
@@ -208,141 +299,112 @@ namespace ShopBanGiay
         }
 
 
-        private void LoadSanPhamBySize(string size)
-        {
-            using (SqlConnection conn = new SqlConnection(connectionString))
-            {
-                try
-                {
-                    conn.Open();
-
-                    string query = @"
-        SELECT 
-            KH.IDKhachHang, KH.TenKhachHang, KH.soDT, KH.DiaChi, 
-            SS.Size, 
-            SC.Mau AS ShoeColor, 
-            SI.Quantity
-        FROM 
-            KhachHang KH
-        LEFT JOIN 
-            ShoeInventory SI ON KH.IDKhachHang = KH.IDKhachHang 
-        LEFT JOIN 
-            SanPham S ON SI.IDSanPham = S.IDSanPham
-        LEFT JOIN 
-            SizeSanPham SS ON SI.IDSize = SS.IDSize
-        LEFT JOIN 
-            MauSanPham SC ON SI.IDMau = SC.IDMau
-        WHERE 
-            SS.Size = @Size;"; 
-
-                    using (SqlCommand cmd = new SqlCommand(query, conn))
-                    {
-                        cmd.Parameters.AddWithValue("@Size", size);
-
-                        using (SqlDataReader reader = cmd.ExecuteReader())
-                        {
-                          
-                            DataTable dataTable = new DataTable();
-                            dataTable.Columns.Add("IDKhachHang", typeof(string));
-                            dataTable.Columns.Add("TenKhachHang", typeof(string));
-                            dataTable.Columns.Add("soDT", typeof(string));
-                            dataTable.Columns.Add("DiaChi", typeof(string));
-                            dataTable.Columns.Add("Size", typeof(string));
-                            dataTable.Columns.Add("ShoeColor", typeof(string));
-                            dataTable.Columns.Add("Quantity", typeof(int));
-
-                            
-                            while (reader.Read())
-                            {
-                                DataRow row = dataTable.NewRow();
-                                row["IDKhachHang"] = reader["IDKhachHang"].ToString();
-                                row["TenKhachHang"] = reader["TenKhachHang"].ToString();
-                                row["soDT"] = reader["soDT"].ToString();
-                                row["DiaChi"] = reader["DiaChi"].ToString();
-                                row["Size"] = reader["Size"].ToString();
-                                row["ShoeColor"] = reader["ShoeColor"].ToString();
-                                row["Quantity"] = Convert.ToInt32(reader["Quantity"]);
-
-                                dataTable.Rows.Add(row);
-                            }
-
-                            
-                            dtgvDSKH.DataSource = dataTable;
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show("Error: " + ex.Message);
-                }
-            }
-        }
-		private void RefreshSizeComboBox()
+		private void LoadSanPhamBySize(string size)
 		{
-			// Lưu giá trị đã chọn hiện tại
-			string selectedValue = cbLocSize.SelectedItem?.ToString();
-
-			// Clear ComboBox trước khi thêm
-			cbLocSize.Items.Clear();
-
-			// Dùng HashSet để đảm bảo không có giá trị trùng lặp
-			HashSet<string> sizeSet = new HashSet<string>();
-
-			foreach (DataGridViewRow row in dtgvDSKH.Rows)
+			using (SqlConnection conn = new SqlConnection(connectionString))
 			{
-				if (row.Cells["Size"].Value != null)
+				try
 				{
-					string sizeValue = row.Cells["Size"].Value.ToString().Trim();
+					conn.Open();
 
-					// Chỉ thêm giá trị nếu chưa tồn tại
-					if (!string.IsNullOrEmpty(sizeValue) && sizeSet.Add(sizeValue))
+					string query = @"
+                SELECT 
+                    KH.IDKhachHang, KH.TenKhachHang, KH.soDT, KH.DiaChi, 
+                    SS.Size, 
+                    SC.Mau AS ShoeColor, 
+                    SI.Quantity
+                FROM 
+                    KhachHang KH
+                LEFT JOIN 
+                    ShoeInventory SI ON KH.IDKhachHang = KH.IDKhachHang 
+                LEFT JOIN 
+                    SanPham S ON SI.IDSanPham = S.IDSanPham
+                LEFT JOIN 
+                    SizeSanPham SS ON SI.IDSize = SS.IDSize
+                LEFT JOIN 
+                    MauSanPham SC ON SI.IDMau = SC.IDMau
+                WHERE 
+                    SS.Size = @Size;"; // Điều kiện lọc theo Size
+
+					using (SqlCommand cmd = new SqlCommand(query, conn))
 					{
-						cbLocSize.Items.Add(sizeValue);
+						// Thêm tham số lọc Size
+						cmd.Parameters.AddWithValue("@Size", size);
+
+						using (SqlDataReader reader = cmd.ExecuteReader())
+						{
+							DataTable dataTable = new DataTable();
+							dataTable.Load(reader); // Tải dữ liệu vào DataTable
+							dtgvDSKH.DataSource = dataTable; // Gán dữ liệu vào DataGridView
+						}
 					}
 				}
-			}
-
-			// Khôi phục giá trị đã chọn nếu nó tồn tại trong danh sách
-			if (selectedValue != null && cbLocSize.Items.Contains(selectedValue))
-			{
-				cbLocSize.SelectedItem = selectedValue;
-			}
-			else if (cbLocSize.Items.Count > 0)
-			{
-				cbLocSize.SelectedIndex = 0; // Chọn mục đầu tiên nếu có
+				catch (Exception ex)
+				{
+					MessageBox.Show($"Lỗi khi tải dữ liệu theo size: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+				}
 			}
 		}
+
+
 
 
 
 
 		private void LoadSizeToComboBox()
-        {
-			try
+		{
+			using (SqlConnection conn = new SqlConnection(connectionString))
 			{
-				RefreshSizeComboBox();
-			}
-			catch (Exception ex)
-			{
-				MessageBox.Show("Error while loading sizes: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+				try
+				{
+					conn.Open();
+
+					string query = "SELECT DISTINCT Size FROM SizeSanPham;"; // Truy vấn lấy danh sách Size
+					using (SqlCommand cmd = new SqlCommand(query, conn))
+					{
+						using (SqlDataReader reader = cmd.ExecuteReader())
+						{
+							while (reader.Read())
+							{
+								cbLocSize.Items.Add(reader["Size"].ToString()); // Thêm Size vào ComboBox
+							}
+						}
+					}
+
+					if (cbLocSize.Items.Count > 0)
+					{
+						cbLocSize.SelectedIndex = 0; // Chọn giá trị đầu tiên làm mặc định
+					}
+				}
+				catch (Exception ex)
+				{
+					MessageBox.Show($"Lỗi khi tải danh sách Size: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+				}
 			}
 		}
 
 
-        private void cbLocSize_SelectedIndexChanged(object sender, EventArgs e)
-        {
 
-			if (cbLocSize.SelectedItem != null)
+		private void cbLocSize_SelectedIndexChanged(object sender, EventArgs e)
+        {
+			// Kiểm tra ComboBox đã chọn Size hợp lệ chưa
+			if (cbLocSize.SelectedItem == null)
 			{
-				string selectedSize = cbLocSize.SelectedItem.ToString();
-				LoadSanPhamBySize(selectedSize); // Hiển thị sản phẩm theo size
+				MessageBox.Show("Vui lòng chọn một size để lọc!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+				return;
 			}
+
+			string selectedSize = cbLocSize.SelectedItem.ToString();
+
+			// Gọi phương thức để tải dữ liệu theo Size được chọn
+			LoadSanPhamBySize(selectedSize);
+
 		}
 
 
         private void cbLocSize_Click(object sender, EventArgs e)
         {
-			RefreshSizeComboBox();
+			
 
 		}
 
@@ -422,7 +484,104 @@ namespace ShopBanGiay
             }
         }
 
+		private void xóaToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			if (dtgvDSKH.SelectedRows.Count == 0)
+			{
+				MessageBox.Show("Vui lòng chọn ít nhất một khách hàng để xóa.", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+				return;
+			}
 
+			DialogResult confirm = MessageBox.Show("Bạn có chắc chắn muốn xóa những khách hàng đã chọn?",
+												   "Xác nhận",
+												   MessageBoxButtons.YesNo,
+												   MessageBoxIcon.Question);
 
+			if (confirm == DialogResult.No)
+				return;
+
+			using (SqlConnection conn = new SqlConnection(connectionString))
+			{
+				try
+				{
+					conn.Open();
+
+					foreach (DataGridViewRow row in dtgvDSKH.SelectedRows)
+					{
+						if (row.Cells["IDKhachHang"].Value != null)
+						{
+							string idKhachHang = row.Cells["IDKhachHang"].Value.ToString();
+
+							string query = "DELETE FROM KhachHang WHERE IDKhachHang = @IDKhachHang";
+
+							using (SqlCommand cmd = new SqlCommand(query, conn))
+							{
+								cmd.Parameters.AddWithValue("@IDKhachHang", idKhachHang);
+								cmd.ExecuteNonQuery(); // Xóa dữ liệu trong cơ sở dữ liệu
+							}
+
+							dtgvDSKH.Rows.Remove(row); // Xóa dòng trong DataGridView
+						}
+					}
+
+					MessageBox.Show("Xóa thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+				}
+				catch (Exception ex)
+				{
+					MessageBox.Show("Lỗi khi xóa dữ liệu: " + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+				}
+			}
+		}
+
+        private void btnThem_Click_1(object sender, EventArgs e)
+        {
+			if (string.IsNullOrWhiteSpace(txtTenKH.Text) ||
+	  string.IsNullOrWhiteSpace(mtkSDTKH.Text) ||
+	  string.IsNullOrWhiteSpace(txtDiaChi.Text))
+			{
+				MessageBox.Show("Vui lòng nhập đầy đủ thông tin khách hàng!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+				return;
+			}
+
+			// Lấy dữ liệu từ các TextBox
+			string tenKhachHang = txtTenKH.Text.Trim();
+			string soDienThoai = mtkSDTKH.Text.Trim();
+			string diaChi = txtDiaChi.Text.Trim();
+
+			// Thêm dữ liệu vào cơ sở dữ liệu
+			using (SqlConnection conn = new SqlConnection(connectionString))
+			{
+				try
+				{
+					conn.Open();
+					string query = @"
+                INSERT INTO KhachHang (TenKhachHang, soDT, DiaChi)
+                VALUES (@TenKhachHang, @SoDT, @DiaChi);";
+
+					using (SqlCommand cmd = new SqlCommand(query, conn))
+					{
+						cmd.Parameters.AddWithValue("@TenKhachHang", tenKhachHang);
+						cmd.Parameters.AddWithValue("@SoDT", soDienThoai);
+						cmd.Parameters.AddWithValue("@DiaChi", diaChi);
+
+						cmd.ExecuteNonQuery(); // Thực thi lệnh SQL
+					}
+
+					// Cập nhật giao diện DataGridView
+					LoadDataFromSQL();
+
+					// Xóa dữ liệu trong TextBox
+					txtTenKH.Clear();
+					mtkSDTKH.Clear();
+					txtDiaChi.Clear();
+
+					MessageBox.Show("Thêm khách hàng thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+				}
+				catch (Exception ex)
+				{
+					MessageBox.Show($"Lỗi khi thêm khách hàng: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+				}
+			}
+		}
     }
 }

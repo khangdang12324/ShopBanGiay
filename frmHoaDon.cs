@@ -71,5 +71,10 @@ namespace ShopBanGiay
             textBox1.AutoCompleteCustomSource.Clear();
             textBox1.AutoCompleteCustomSource.AddRange(filteredItems);
         }
+
+        private void frmHoaDon_Load(object sender, EventArgs e)
+        {
+
+        }
     }
 }

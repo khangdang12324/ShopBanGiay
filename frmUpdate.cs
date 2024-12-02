@@ -16,5 +16,10 @@ namespace ShopBanGiay
         {
             InitializeComponent();
         }
+
+        private void frmUpdate_Load(object sender, EventArgs e)
+        {
+
+        }
     }
 }
