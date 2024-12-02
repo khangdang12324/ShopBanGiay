@@ -468,7 +468,7 @@ VALUES ('2024-11-28', 150000, 'Chưa thanh toán'),
 	   SELECT * FROM Hoadon;
 	   SELECT * FROM Hoadon1;
 
-
+	  
  CREATE TABLE HoaDon (
     IDHoaDon INT IDENTITY(1,1) PRIMARY KEY,
     NgayBan DATETIME,
@@ -490,3 +490,4 @@ VALUES
 SELECT DB_NAME() AS CurrentDatabase;
 
 SELECT IDHoaDon, NgayBan, TongTien FROM HoaDon
+SELECT FORMAT(NgayBan, 'MM/yyyy') AS Thang, SUM(TongTien) AS TongDoanhThu FROM HoaDon GROUP BY FORMAT(NgayBan, 'MM/yyyy') ORDER BY FORMAT(NgayBan, 'MM/yyyy')
