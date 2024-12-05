@@ -3,15 +3,9 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Data.SqlClient;
-using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Printing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Xml.Linq;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace ShopBanGiay
 {
@@ -19,9 +13,24 @@ namespace ShopBanGiay
     {
         public List<Shoes> shoesList = new List<Shoes>();
         private BindingSource bindingSource = new BindingSource();
-        string connectionString = @"Data Source=LAPTOP-KHANGDAN;Initial Catalog=SHOESSHOP2;Integrated Security=True";
-      
-         List<KhachHang> dskhachHang = new List<KhachHang>();
+        string connectionString = @"Data Source=LAPTOP-OR4AEC92\MSSQLSERVER01;Initial Catalog=SHOESSHOP2;Integrated Security=True;";
+        string query = @"
+    SELECT 
+        S.IDSanPham,
+        S.TenSanPham,
+        S.ThuongHieu,
+        S.Loai,
+        S.Gia,
+        SS.Size,
+        SC.Mau,
+        SI.Quantity
+    FROM ShoeInventory SI
+    JOIN SanPham S ON SI.IDSanPham = S.IDSanPham
+    JOIN SizeSanPham SS ON SI.IDSize = SS.IDSize
+    JOIN MauSanPham SC ON SI.IDMau = SC.IDMau
+    WHERE S.enable = 1;";
+
+        List<KhachHang> dskhachHang = new List<KhachHang>();
          KhachHang khachHang;
 
 		List<HoaDon1> dsHoadon = new List<HoaDon1>();
@@ -88,20 +97,7 @@ namespace ShopBanGiay
 
 
 
-            string query = @"
-                                        SELECT 
-                                S.IDSanPham,
-                                S.TenSanPham,
-                                S.ThuongHieu,
-                                S.Loai,
-                                S.Gia,
-                                SS.Size,
-                                SC.Mau,
-                                SI.Quantity
-                            FROM ShoeInventory SI
-                            JOIN SanPham S ON SI.IDSanPham = S.IDSanPham
-                            JOIN SizeSanPham SS ON SI.IDSize = SS.IDSize
-                            JOIN MauSanPham SC ON SI.IDMau = SC.IDMau;";
+           
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 try
@@ -116,7 +112,7 @@ namespace ShopBanGiay
                     adapter.Fill(dataTable);
 
                     // Gán dữ liệu vào DataGridView
-                    dataGridView1.DataSource = dataTable;
+                    dgvKhoHang.DataSource = dataTable;
                 }
                 catch (Exception ex)
                 {
@@ -127,21 +123,7 @@ namespace ShopBanGiay
         private void LoadData(string searchText = "")
         {
             // Câu truy vấn cơ bản
-            string query = @"
-        SELECT 
-            S.IDSanPham,
-            S.TenSanPham ,
-            S.ThuongHieu,
-            S.Loai,
-            S.Gia,
-            SS.Size,
-            SC.Mau,
-            SI.Quantity
-        FROM ShoeInventory SI
-        JOIN SanPham S ON SI.IDSanPham = S.IDSanPham
-        JOIN SizeSanPham SS ON SI.IDSize = SS.IDSize
-        JOIN MauSanPham SC ON SI.IDMau = SC.IDMau";
-
+           
             // Thêm điều kiện tìm kiếm nếu có từ khóa
             if (!string.IsNullOrEmpty(searchText))
             {
@@ -164,12 +146,10 @@ namespace ShopBanGiay
                         SqlDataAdapter dataAdapter = new SqlDataAdapter(cmd);
                         DataTable dataTable = new DataTable();
                         dataAdapter.Fill(dataTable);
-
-                        // Gán dữ liệu vào BindingSource
                         bindingSource.DataSource = dataTable;
 
                         // Liên kết dữ liệu với DataGridView
-                        dataGridView1.DataSource = bindingSource;
+                        dgvKhoHang.DataSource = bindingSource;
                     }
                 }
             }
@@ -256,8 +236,6 @@ namespace ShopBanGiay
         private void txtSearch_TextChanged(object sender, EventArgs e)
         {
 
-
-
             string searchText = txtSearch.Text.Trim().ToLower();
 
             LoadData(searchText);
@@ -272,10 +250,10 @@ namespace ShopBanGiay
 
         private void dataGridView1_SelectionChanged(object sender, EventArgs e)
         {
-            if (dataGridView1.SelectedRows.Count > 0)
+            if (dgvKhoHang.SelectedRows.Count > 0)
             {
 
-                DataGridViewRow selectedRow = dataGridView1.SelectedRows[0];
+                DataGridViewRow selectedRow = dgvKhoHang.SelectedRows[0];
 
 
             }
@@ -295,7 +273,7 @@ namespace ShopBanGiay
             if (e.RowIndex >= 0)
             {
                 // Lấy dữ liệu từ hàng được chọn trong dataGridView1
-                DataGridViewRow selectedRow = dataGridView1.Rows[e.RowIndex];
+                DataGridViewRow selectedRow = dgvKhoHang.Rows[e.RowIndex];
 
                 string shoeID = selectedRow.Cells["IDSanPham"].Value.ToString();
                 string shoeName = selectedRow.Cells["TenSanPham"].Value.ToString();
@@ -307,7 +285,7 @@ namespace ShopBanGiay
                 bool found = false;
 
                 // Kiểm tra xem sản phẩm với cả ShoeID và ShoeSize đã tồn tại trong dataGridView2 chưa
-                foreach (DataGridViewRow row in dataGridView2.Rows)
+                foreach (DataGridViewRow row in dgvGioHang.Rows)
                 {
                     if (row.Cells[0].Value != null && row.Cells[0].Value.ToString() == shoeID &&
                         row.Cells[4].Value != null && row.Cells[4].Value.ToString() == shoeSize) // So sánh cả ShoeID và ShoeSize
@@ -327,7 +305,7 @@ namespace ShopBanGiay
                 // Nếu sản phẩm chưa tồn tại, thêm mới vào dataGridView2
                 if (!found)
                 {
-                    dataGridView2.Rows.Add(shoeID, shoeName, brand, price, shoeSize, shoeColor, 1, price);
+                    dgvGioHang.Rows.Add(shoeID, shoeName, brand, price, shoeSize, shoeColor, 1, price);
                 }
 
                 // Giảm số lượng trong dataGridView1
@@ -353,16 +331,16 @@ namespace ShopBanGiay
 
         private void btnAdd_Click(object sender, EventArgs e)
         {
-            if (dataGridView1.CurrentRow != null) // Kiểm tra có hàng nào được chọn
+            if (dgvKhoHang.CurrentRow != null) // Kiểm tra có hàng nào được chọn
             {
-                DataGridViewRow selectedRow = dataGridView1.CurrentRow;
+                DataGridViewRow selectedRow = dgvKhoHang.CurrentRow;
 
                 // Lấy giá trị Quantity từ hàng hiện tại
                 int availableQuantity = Convert.ToInt32(selectedRow.Cells["Quantity"].Value);
 
-                if (availableQuantity >= numericUpDown3.Value) // Kiểm tra đủ số lượng để thêm vào giỏ
+                if (availableQuantity >= nbSoLuong.Value) // Kiểm tra đủ số lượng để thêm vào giỏ
                 {
-                    for (int i = 0; i < numericUpDown3.Value; i++)
+                    for (int i = 0; i < nbSoLuong.Value; i++)
                     {
                         ThemVaoGioHang(selectedRow); // Thêm sản phẩm vào giỏ hàng
                     }
@@ -390,7 +368,7 @@ namespace ShopBanGiay
             bool found = false;
 
             // Kiểm tra sản phẩm đã tồn tại trong dataGridView2 chưa
-            foreach (DataGridViewRow row in dataGridView2.Rows)
+            foreach (DataGridViewRow row in dgvGioHang.Rows)
             {
                 if (row.Cells[0].Value != null && row.Cells[0].Value.ToString() == shoeID &&
                     row.Cells[4].Value != null && row.Cells[4].Value.ToString() == shoeSize)
@@ -407,7 +385,7 @@ namespace ShopBanGiay
 
             if (!found)
             {
-                dataGridView2.Rows.Add(shoeID, shoeName, brand, price, shoeSize, shoeColor, 1, price);
+                dgvGioHang.Rows.Add(shoeID, shoeName, brand, price, shoeSize, shoeColor, 1, price);
             }
 
             // Giảm số lượng trong dataGridView1
@@ -427,9 +405,9 @@ namespace ShopBanGiay
         {
             if (e.ColumnIndex == 8 && e.RowIndex >= 0)
             {
-                DataGridViewRow selectedRow = dataGridView2.Rows[e.RowIndex];
+                DataGridViewRow selectedRow = dgvGioHang.Rows[e.RowIndex];
                 TraGiayVeKho(selectedRow);
-                dataGridView2.Rows.RemoveAt(e.RowIndex);
+                dgvGioHang.Rows.RemoveAt(e.RowIndex);
             }
         }
 
@@ -442,7 +420,7 @@ namespace ShopBanGiay
                 int quantityToReturn = Convert.ToInt32(rowInCart.Cells[6].Value);
 
                 // Tìm hàng tương ứng trong dataGridView1
-                foreach (DataGridViewRow rowInStock in dataGridView1.Rows)
+                foreach (DataGridViewRow rowInStock in dgvKhoHang.Rows)
                 {
                     if (rowInStock.Cells["IDSanPham"].Value != null &&
                         rowInStock.Cells["IDSanPham"].Value.ToString() == shoeID &&
@@ -465,7 +443,7 @@ namespace ShopBanGiay
             {
                 conn.Open();
 
-                foreach (DataGridViewRow row in dataGridView2.Rows)
+                foreach (DataGridViewRow row in dgvGioHang.Rows)
                 {
                     if (row.Cells[0].Value != null && int.TryParse(row.Cells[0].Value.ToString(), out int IDSanPham))
                     {
@@ -473,7 +451,7 @@ namespace ShopBanGiay
                         string Mau = row.Cells[5].Value?.ToString() ?? string.Empty;
                         int quantityChange = row.Cells[6].Value != null ? Convert.ToInt32(row.Cells[6].Value) : 0;
 
-                        using (SqlCommand cmd = new SqlCommand("UpdateShoeInventory1", conn))
+                        using (SqlCommand cmd = new SqlCommand("UpdateShoeInventory", conn))
                         {
                             cmd.CommandType = CommandType.StoredProcedure;
 
@@ -490,7 +468,7 @@ namespace ShopBanGiay
                 MessageBox.Show("Thanh toán thành công! Số lượng trong kho đã được cập nhật.", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
                 // Xóa giỏ hàng
-                dataGridView2.Rows.Clear();
+                dgvGioHang.Rows.Clear();
             }
         }
 
@@ -501,7 +479,7 @@ namespace ShopBanGiay
 
         private void textBox3_Click(object sender, EventArgs e)
         {
-            textBox3.Text = txtHoTenKH.Text;
+            txtNguoiNhan.Text = txtHoTenKH.Text;
         }
 
         private void txtDiaChiKH_TextChanged(object sender, EventArgs e)
@@ -511,7 +489,7 @@ namespace ShopBanGiay
 
         private void textBox4_Click(object sender, EventArgs e)
         {
-            textBox4.Text = DateTime.Now.ToString();
+            txtNgayLap.Text = DateTime.Now.ToString();
         }
 
         private void textBox7_Click(object sender, EventArgs e)
@@ -519,7 +497,7 @@ namespace ShopBanGiay
             decimal sum = 0;
 
            
-            foreach (DataGridViewRow row in dataGridView2.Rows)
+            foreach (DataGridViewRow row in dgvGioHang.Rows)
             {
                 
                 if (row.Cells["Column8"].Value != null)
@@ -563,14 +541,14 @@ namespace ShopBanGiay
 		{
             
 			// Lấy dữ liệu từ các Controls
-			string ngayLap = textBox4.Text;
+			string ngayLap = txtNgayLap.Text;
 			string tongTienHang = txtTongTienHang.Text;
 			string phiGiaoHang = txtPhiGiaoHang.Text;
 			decimal giamGia = nbGiamGia.Value;
 			decimal thue = nbThue.Value;
 			string trangThai = comboBox1.SelectedItem?.ToString() ?? "Chưa chọn";
 			string tongThanhToan = txtTongThanhToan.Text;
-			string ghiChu = richTextBox1.Text;
+			string ghiChu = txtGhiChu.Text;
 
 			// Tạo hóa đơn để in
 			PrintDocument printDoc = new PrintDocument();
